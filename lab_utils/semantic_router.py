@@ -64,3 +64,14 @@ class SemanticRouter:
             return fallback
         name, score = candidates[0]
         return name if score >= self.threshold else fallback
+
+    def route_with_chain(self, request: str, chain: list[str]) -> str:
+        """Thử route chính; nếu điểm < ngưỡng, đi theo chuỗi fallback."""
+        candidates = self.route(request, top_k=len(self.agents))
+        scores = {name: score for name, score in candidates}
+        valid_agents = [a for a in chain if a in scores]
+        if valid_agents:
+            best_agent = max(valid_agents, key=lambda name: scores[name])
+            if scores[best_agent] >= self.threshold:
+                return best_agent
+        return chain[-1] if chain else "orchestrator"

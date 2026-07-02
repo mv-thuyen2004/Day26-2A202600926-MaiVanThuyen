@@ -80,6 +80,16 @@ class GovernanceGuard:
 
         if tool_name == "search_documents":
             query = str(arguments.get("query", ""))
+            if "password" in query.lower():
+                decision = GovernanceDecision(
+                    verdict=GovernanceVerdict.DENY,
+                    reason="Truy vấn chứa từ khóa nhạy cảm bị cấm (password)",
+                    actor_id=actor_id,
+                    connection_type=ConnectionType.MCP,
+                    resource=f"mcp:research-tools/{tool_name}",
+                )
+                self._log(decision, "mcp_tool_call", query, trace_id)
+                return decision
             max_len = int(tool_policy.get("max_query_length", 500))
             if len(query) > max_len:
                 decision = GovernanceDecision(
